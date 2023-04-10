@@ -16,7 +16,6 @@ module.exports = class Quin {
     // Terminal commands
     // this.first = () => this.#query;
     // this.last = () => this.#query;
-    // this.count = () => this.#query;
   }
 
   id(id) {
@@ -52,19 +51,19 @@ module.exports = class Quin {
     return this;
   }
 
-  first(first) {
-    this.#propCheck('first', 'id', 'last');
-    this.isCursorPaging = true;
-    this.#query.first = first + 2; // Adding 2 for pagination meta info (hasNext hasPrev)
-    return this;
-  }
+  // first(first) {
+  //   this.#propCheck('first', 'id', 'last');
+  //   this.isCursorPaging = true;
+  //   this.#query.first = first + 2; // Adding 2 for pagination meta info (hasNext hasPrev)
+  //   return this;
+  // }
 
-  last(last) {
-    this.#propCheck('last', 'id', 'first');
-    this.isCursorPaging = true;
-    this.#query.last = last + 2; // Adding 2 for pagination meta info (hasNext hasPrev)
-    return this;
-  }
+  // last(last) {
+  //   this.#propCheck('last', 'id', 'first');
+  //   this.isCursorPaging = true;
+  //   this.#query.last = last + 2; // Adding 2 for pagination meta info (hasNext hasPrev)
+  //   return this;
+  // }
 
   before(before) {
     this.#propCheck('before', 'id');
@@ -88,16 +87,20 @@ module.exports = class Quin {
     return this.resolve(Object.assign(this.#query, { op: 'findMany' }));
   }
 
-  save() {
-    if (this.#query.id) return this.resolve(Object.assign(this.#query, { op: 'updateOne' }));
-    if (this.#query.where) return this.resolve(Object.assign(this.#query, { op: 'updateMany' }));
-    return this.resolve(Object.assign(this.#query, { op: 'createMany' }));
+  count() {
+    return this.resolve(Object.assign(this.#query, { op: 'count' }));
   }
 
-  delete() {
-    if (this.#query.id) return this.resolve(Object.assign(this.#query, { op: 'deleteOne' }));
-    if (this.#query.where) return this.resolve(Object.assign(this.#query, { op: 'deleteMany' }));
-    throw new Error('Delete requires id() or where()');
+  save(...args) {
+    const { id, where } = this.#query;
+    const prefix = (id || where ? (args[1] ? 'upsert' : 'update') : 'create'); // eslint-disable-line
+    return this.#mutation(prefix, ...args);
+  }
+
+  delete(...args) {
+    const { id, where } = this.#query;
+    if (!id && !where) throw new Error('Delete requires id() or where()');
+    return this.#mutation('delete', ...args);
   }
 
   clone(query = {}) {
@@ -108,6 +111,14 @@ module.exports = class Quin {
 
   resolve() {
     return this.#query;
+  }
+
+  #mutation(prefix, ...args) {
+    args = args.flat();
+    const { id, limit } = this.#query;
+    const suffix = id || limit === 1 || (prefix === 'create' && args.length === 1) ? 'One' : 'Many';
+    const input = suffix === 'One' ? args[0] : args;
+    return this.resolve(Object.assign(this.#query, { op: `${prefix}${suffix}`, input }));
   }
 
   #normalize(data) {
