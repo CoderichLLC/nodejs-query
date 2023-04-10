@@ -14,10 +14,11 @@
     "lint": "eslint --config=.eslintrc ./",
     "dev": "coderich-dev"
   },
+  "dependencies": {
+    "@coderich/util": "0.0.3",
+    "flat": "5.0.2"
+  },
   "devDependencies": {
     "@coderich/dev": "0.0.17"
-  },
-  "dependencies": {
-    "flat": "5.0.2"
   }
 }

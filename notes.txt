@@ -1,3 +1,5 @@
+// const counterOps = { eq: 'ne', ne: 'eq', lt: 'gte', lte: 'gt', gt: 'lte', gte: 'lt', in: 'nin', nin: 'in' };
+
 {
   "select": ["users.name", "orders.total"],
   "from": [
