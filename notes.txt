@@ -1,0 +1,28 @@
+{
+  "select": ["users.name", "orders.total"],
+  "from": [
+    {
+      "table": "users"
+    },
+    {
+      "table": "orders",
+      "join": [
+        {
+          "table": "order_items",
+          "on": "orders.id = order_items.order_id"
+        }
+      ]
+    }
+  ],
+  "where": "users.id = 1",
+  "group_by": ["users.name"],
+  "having": "sum(orders.total) > 100",
+  "order_by": [
+    {
+      "field": "users.name",
+      "direction": "asc"
+    }
+  ],
+  "limit": 10,
+  "offset": 0
+}
