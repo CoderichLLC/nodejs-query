@@ -23,7 +23,9 @@ describe('Quin', () => {
     expect(quin.clone().where({ network: { id: 1 } }).one()).toEqual({ op: 'findOne', model: 'table', where: { network: { _id: 1 } } });
     expect(quin.clone().where({ 'network.id': 1 }).one()).toEqual({ op: 'findOne', model: 'table', where: { 'network._id': 1 } });
     expect(quin.clone().where({ networkid: 1 }).one()).toEqual({ op: 'findOne', model: 'table', where: { networkid: 1 } });
-    expect(quin.clone().where({ 'my.array': ['a', 'b', 'c'] }).one()).toEqual({ op: 'findOne', model: 'table', where: { 'my.array': ['a', 'b', 'c'] } });
+    expect(quin.clone().where({ 'my.array': ['a', 'b', 'c'] }).one()).toEqual({ op: 'findOne', model: 'table', where: { 'my.array': { $eq: ['a', 'b', 'c'] } } });
+    expect(quin.clone().where({ 'my.array': { $in: ['a', 'b', 'c'] } }).one()).toEqual({ op: 'findOne', model: 'table', where: { 'my.array': { $in: ['a', 'b', 'c'] } } });
+    expect(quin.clone().where({ 'my.array.$in': ['a', 'b', 'c'] }).one()).toEqual({ op: 'findOne', model: 'table', where: { 'my.array.$in': ['a', 'b', 'c'] } });
     expect(quin.clone().where({ $or: [{ id: 1 }, { network: { id: 2 } }] }).one()).toEqual({ op: 'findOne', model: 'table', where: { $or: [{ _id: 1 }, { network: { _id: 2 } }] } });
     expect(quin.clone().where({ $or: [{ id: 1 }, { 'network.id': 2 }] }).one()).toEqual({ op: 'findOne', model: 'table', where: { $or: [{ _id: 1 }, { 'network._id': 2 }] } });
   });

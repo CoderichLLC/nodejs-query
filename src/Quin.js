@@ -4,6 +4,7 @@ module.exports = class Quin {
   #query = Object.defineProperties({}, {
     id: { writable: true },
     keyMap: { writable: true, value: {} },
+    arrayOp: { writable: true, value: '$eq' },
   });
 
   constructor(query = {}) {
@@ -101,6 +102,7 @@ module.exports = class Quin {
 
   clone(query = {}) {
     query.keyMap = query.keyMap || this.#query.keyMap;
+    query.arrayOp = query.arrayOp || this.#query.arrayOp;
     return new Quin({ ...this.#query, ...query });
   }
 
@@ -109,28 +111,26 @@ module.exports = class Quin {
   }
 
   #normalize(data) {
-    return Util.unflatten(Object.entries(Util.flatten(data)).reduce((prev, [key, value]) => {
+    if (typeof data !== 'object') return data;
+
+    // Flatten (but don't spread arrays - we want to special handle them)
+    return Util.unflatten(Object.entries(Util.flatten(data, false)).reduce((prev, [key, value]) => {
       // Rename key
       const $key = Object.entries(this.#query.keyMap).reduce((p, [k, v]) => {
         const regex = new RegExp(`((?:^|\\.))${k}\\b`, 'g');
         return p.replace(regex, `$1${v}`);
       }, key);
 
+      // Special array handling, ensure we understand the meaning
+      if (Array.isArray(value)) {
+        const match = $key.match(/\$[a-zA-Z]{2}(?=']|$)/);
+        const $value = value.map(el => this.#normalize(el));
+        value = match ? $value : { [this.#query.arrayOp]: $value };
+      }
+
       // Assign it back
       return Object.assign(prev, { [$key]: value });
     }, {}));
-
-    // return args.flat().map((arg) => {
-    //   return Object.entries(Flat.flatten(arg, { safe: true })).reduce((arr, [key, value]) => {
-    //     let op;
-    //     [key, op = 'eq'] = key.split('.$');
-    //     // if (key.startsWith('$not')) return arr.concat(...Quin.where(true, value));
-    //     if (key.startsWith('$or')) return arr.concat([Quin.where(negate, value)]);
-    //     if (Array.isArray(value)) op = 'in';
-    //     // if (negate) op = counterOps[op];
-    //     return arr.concat({ key, [op]: value });
-    //   }, []);
-    // });
   }
 
   #propCheck(prop, ...checks) {

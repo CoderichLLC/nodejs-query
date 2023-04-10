@@ -28,3 +28,15 @@
   "limit": 10,
   "offset": 0
 }
+
+// return args.flat().map((arg) => {
+//   return Object.entries(Flat.flatten(arg, { safe: true })).reduce((arr, [key, value]) => {
+//     let op;
+//     [key, op = 'eq'] = key.split('.$');
+//     // if (key.startsWith('$not')) return arr.concat(...Quin.where(true, value));
+//     if (key.startsWith('$or')) return arr.concat([Quin.where(negate, value)]);
+//     if (Array.isArray(value)) op = 'in';
+//     // if (negate) op = counterOps[op];
+//     return arr.concat({ key, [op]: value });
+//   }, []);
+// });
