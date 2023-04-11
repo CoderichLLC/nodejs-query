@@ -40,3 +40,27 @@
 //     return arr.concat({ key, [op]: value });
 //   }, []);
 // });
+
+
+// #normalize(data) {
+  //   if (typeof data !== 'object') return data;
+
+  //   // Flatten (but don't spread arrays - we want to special handle them)
+  //   return Util.unflatten(Object.entries(Util.flatten(data, false)).reduce((prev, [key, value]) => {
+  //     // Rename key
+  //     const $key = Object.entries(this.#query.keyMap).reduce((p, [k, v]) => {
+  //       const regex = new RegExp(`((?:^|\\.))${k}\\b`, 'g');
+  //       return p.replace(regex, `$1${v}`);
+  //     }, key);
+
+  //     // Special array handling, ensure we understand the meaning
+  //     if (Array.isArray(value)) {
+  //       const match = $key.match(/\$[a-zA-Z]{2}(?=']|$)/);
+  //       const $value = value.map(el => this.#normalize(el));
+  //       value = match ? $value : { [this.#query.arrayOp]: $value };
+  //     }
+
+  //     // Assign it back
+  //     return Object.assign(prev, { [$key]: value });
+  //   }, {}));
+  // }

@@ -1,39 +1,35 @@
-const Util = require('@coderich/util');
-
-module.exports = class Quin {
+module.exports = class Query {
   #query = Object.defineProperties({}, {
-    id: { writable: true },
-    keyMap: { writable: true, value: {} },
-    arrayOp: { writable: true, value: '$eq' },
+    id: { writable: true, enumerable: false },
+    idKey: { writable: true, enumerable: false, value: 'id' },
   });
 
   constructor(query = {}) {
     Object.assign(this.#query, query);
-
-    // this.join = () => this;
-    // this.sort = () => this;
-
-    // Terminal commands
-    // this.first = () => this.#query;
-    // this.last = () => this.#query;
   }
 
   id(id) {
     this.#propCheck('id', 'where', 'sort', 'skip', 'limit', 'before', 'after', 'first', 'last');
     this.#query.id = id;
-    this.#query.where = this.#normalize({ id });
+    this.#query.where = { [this.#query.idKey]: id };
     return this;
   }
 
   where(clause) {
     this.#propCheck('where', 'id');
-    this.#query.where = this.#normalize(clause);
+    this.#query.where = clause;
     return this;
   }
 
-  select(...args) {
+  select(...fields) {
     this.#propCheck('fields');
-    this.#query.fields = args.flat();
+    this.#query.fields = fields.flat();
+    return this;
+  }
+
+  populate(...fields) {
+    this.#propCheck('populate');
+    this.#query.populate = fields.flat();
     return this;
   }
 
@@ -51,20 +47,6 @@ module.exports = class Quin {
     return this;
   }
 
-  // first(first) {
-  //   this.#propCheck('first', 'id', 'last');
-  //   this.isCursorPaging = true;
-  //   this.#query.first = first + 2; // Adding 2 for pagination meta info (hasNext hasPrev)
-  //   return this;
-  // }
-
-  // last(last) {
-  //   this.#propCheck('last', 'id', 'first');
-  //   this.isCursorPaging = true;
-  //   this.#query.last = last + 2; // Adding 2 for pagination meta info (hasNext hasPrev)
-  //   return this;
-  // }
-
   before(before) {
     this.#propCheck('before', 'id');
     this.isCursorPaging = true;
@@ -76,6 +58,12 @@ module.exports = class Quin {
     this.#propCheck('after', 'id');
     this.isCursorPaging = true;
     this.#query.after = after;
+    return this;
+  }
+
+  sort(sort) {
+    this.#propCheck('sort', 'id');
+    this.#query.sort = sort;
     return this;
   }
 
@@ -91,6 +79,20 @@ module.exports = class Quin {
     return this.resolve(Object.assign(this.#query, { op: 'count' }));
   }
 
+  // first(first) {
+  //   this.#propCheck('first', 'id', 'last');
+  //   this.isCursorPaging = true;
+  //   this.#query.first = first + 2; // Adding 2 for pagination meta info (hasNext hasPrev)
+  //   return this;
+  // }
+
+  // last(last) {
+  //   this.#propCheck('last', 'id', 'first');
+  //   this.isCursorPaging = true;
+  //   this.#query.last = last + 2; // Adding 2 for pagination meta info (hasNext hasPrev)
+  //   return this;
+  // }
+
   save(...args) {
     const { id, where } = this.#query;
     const prefix = (id || where ? (args[1] ? 'upsert' : 'update') : 'create'); // eslint-disable-line
@@ -104,9 +106,8 @@ module.exports = class Quin {
   }
 
   clone(query = {}) {
-    query.keyMap = query.keyMap || this.#query.keyMap;
-    query.arrayOp = query.arrayOp || this.#query.arrayOp;
-    return new Quin({ ...this.#query, ...query });
+    query.idKey = query.idKey || this.#query.idKey;
+    return new Query({ ...this.#query, ...query });
   }
 
   resolve() {
@@ -119,29 +120,6 @@ module.exports = class Quin {
     const suffix = id || limit === 1 || (prefix === 'create' && args.length === 1) ? 'One' : 'Many';
     const input = suffix === 'One' ? args[0] : args;
     return this.resolve(Object.assign(this.#query, { op: `${prefix}${suffix}`, input }));
-  }
-
-  #normalize(data) {
-    if (typeof data !== 'object') return data;
-
-    // Flatten (but don't spread arrays - we want to special handle them)
-    return Util.unflatten(Object.entries(Util.flatten(data, false)).reduce((prev, [key, value]) => {
-      // Rename key
-      const $key = Object.entries(this.#query.keyMap).reduce((p, [k, v]) => {
-        const regex = new RegExp(`((?:^|\\.))${k}\\b`, 'g');
-        return p.replace(regex, `$1${v}`);
-      }, key);
-
-      // Special array handling, ensure we understand the meaning
-      if (Array.isArray(value)) {
-        const match = $key.match(/\$[a-zA-Z]{2}(?=']|$)/);
-        const $value = value.map(el => this.#normalize(el));
-        value = match ? $value : { [this.#query.arrayOp]: $value };
-      }
-
-      // Assign it back
-      return Object.assign(prev, { [$key]: value });
-    }, {}));
   }
 
   #propCheck(prop, ...checks) {

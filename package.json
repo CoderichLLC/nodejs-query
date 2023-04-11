@@ -1,7 +1,7 @@
 {
-  "name": "@coderich/quin",
-  "main": "src/Quin.js",
-  "version": "0.0.6",
+  "name": "@coderich/query",
+  "main": "src/Query.js",
+  "version": "0.0.0",
   "publishConfig": {
     "access": "public"
   },
@@ -13,9 +13,6 @@
     "test": "jest --config=jest.config.js",
     "lint": "eslint --config=.eslintrc ./",
     "dev": "coderich-dev"
-  },
-  "dependencies": {
-    "@coderich/util": "0.0.5"
   },
   "devDependencies": {
     "@coderich/dev": "0.0.17"
